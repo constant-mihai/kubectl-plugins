@@ -1,23 +1,28 @@
 # kubectl plugins
 
+Various productivity plugins for kubectl.
+
+## kubectl kubeconfig
+
+**kubectl kubeconfig** manages kube config files. When creating a new configuration file it will store it under the following path:
+```
+/home/user/.kube/config.d/aws-profile.us-west-1.cluster-name/namespace.yaml
+```
+It will **not** append multiple contexts under a single file. Storing one context per file allows the user to isolate kubernetes contexts to terminal windows.
+If you prefer using a single kube config file or to manage these files on your own, then don't use **kubectl kubeconfig**.
+
+## kubectl pod-ops
+
+**kubectl pod-ops** is a short hand for various pod operations like listing, exec or copy.
+
 ## Example usage
 ```
-# kubectl kubeconfig create --profile dev --region us-west-1 --name cluster-name --namespace namespace
-# kubectl kubeconfig list dev us-west-1 namespace
-export KUBECONFIG=/home/user/.kube/config.d/dev.us-west-1.cluster-name/namespace.yaml
-```
-
-To switch a context, if the namespace is not provided, it will switch you to a default context which doesn't have a namespace:
-```
-# kubectl kubeconfig switch-context profile region cluster-name [namespace]
+# kubectl kubeconfig create --profile aws-profile --region us-west-1 --name cluster-name --namespace namespace
+# kubectl kubeconfig list aws-profile us-west-1 namespace
+export KUBECONFIG=/home/user/.kube/config.d/aws-profile.us-west-1.cluster-name/namespace.yaml
 ```
 
 This lists both namespaces in the kubernetes cluster and namespaces which have their own kubeconfig file. The search_string will try to be matched.
 ```
 # kubectl kubeconfig list-namespaces search_string
-```
-
-To switch to a different namespace in the same context:
-```
-# kubectl kubeconfig switch-namespace namespace
 ```
