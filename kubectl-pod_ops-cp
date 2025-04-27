@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+
+source /usr/local/bin/kubectlutils.sh
+
+namespace=$(kubectl config view --minify --output 'jsonpath={..namespace}')
+direction="download"
+source_path=""
+destination_path=""
+while [[ $# > 0 ]]; do
+    case $1 in
+        "--help"|"-h")
+            kcp_usage
+            exit
+            ;;
+        "--upload"|"-up")
+            direction="upload"
+            shift
+            ;;
+        *)
+            if [[ -z "$source_path" ]]; then
+                source_path=$1
+                shift
+                continue
+            fi
+
+            if [[ -z "$destination_path" ]]; then
+                destination_path=$2
+            fi
+            shift
+            ;;
+    esac
+done
+
+if [ -z "$source_path" ]; then
+    echo "error: missing source"
+    kcp_usage
+    exit
+fi
+
+if [ -z "$destination_path" ]; then
+    if [[ ( -z $direction || x"$direction" == "xdownload" ) ]]; then
+        destination_path=./$(basename "$source_path")
+    else
+        destination_path=/$(basename "$source_path")
+    fi
+fi
+
+
+if [[ ( -z $direction || x"$direction" == "xdownload" ) && -f $destination_path ]]; then
+    read -p "$destination_path exists, overwrite? [Y,n]: " input
+    if [[ -z "$input" || "$input" =~ ^[Yy]$ ]]; then
+        echo $input
+        echo "replacing file"
+    else
+        echo "aborting"
+        exit
+    fi
+fi
+
+list_pods
+echo ""
+echo -n "Select a pod to list its containers (enter ID number): "
+read pod_id
+echo ""
+list_containers "$pod_id" true
+echo ""
+echo -n "Select a container (enter ID number): "
+read container_id
+echo ""
+
+kcp_usage() {
+    echo "Usage:"
+    echo "kubectl pod-ops cp [options] source [destination_path]"
+    echo "options:"
+    echo "-up|--upload"
+}
+
+if [[ "x$direction" == "xupload" ]]; then
+    echo "kubectl cp $source_path $namespace/${PODS_ARRAY[$pod_id]}:$destination_path --container ${CONTAINERS_ARRAY[$container_id]}"
+    kubectl cp $source_path $namespace/${PODS_ARRAY[$pod_id]}:$destination_path --container ${CONTAINERS_ARRAY[$container_id]}
+else
+    echo "kubectl cp $namespace/${PODS_ARRAY[$pod_id]}:$source_path --container ${CONTAINERS_ARRAY[$container_id]} $destination_path"
+    kubectl cp $namespace/${PODS_ARRAY[$pod_id]}:$source_path --container ${CONTAINERS_ARRAY[$container_id]} $destination_path
+fi

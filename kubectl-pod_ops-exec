@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+source /usr/local/bin/kubectlutils.sh
+
+with_tty=""
+with_stdin=""
+cmd=""
+while [[ $# > 0 ]]; do
+    case $1 in
+        -it)
+            with_stdin="-i"
+            with_tty="-t"
+            shift
+            ;;
+        -i)
+            with_stdin="-i"
+            shift
+            ;;
+        -t)
+            shift
+            with_tty="-t"
+            ;;
+        *)
+            cmd="$cmd $1"
+            shift
+            ;;
+        -h|--help)
+            echo "Usage:"
+            echo "kubectl podops exec [-it] command"
+            return
+            shift
+            ;;
+    esac
+done
+
+list_pods
+echo ""
+echo -n "Select a pod to list its containers (enter ID number): "
+read pod_id
+echo ""
+list_containers "$pod_id" true
+echo ""
+echo -n "Select a container (enter ID number): "
+read container_id
+echo ""
+
+namespace=$(kubectl config view --minify --output 'jsonpath={..namespace}')
+echo "kubectl exec $with_stdin $with_tty --namespace $namespace ${PODS_ARRAY[$pod_id]} --container ${CONTAINERS_ARRAY[$container_id]} -- $cmd"
+
+kubectl exec $with_stdin $with_tty --namespace $namespace ${PODS_ARRAY[$pod_id]} --container ${CONTAINERS_ARRAY[$container_id]} -- $cmd

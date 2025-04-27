@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+source /usr/local/bin/kubectlutils.sh
+
+list_containers=false
+while [[ $# > 0 ]]; do
+    case $1 in
+        -c|--containers)
+            list_containers=true
+            shift
+            ;;
+        *)
+            echo "Usage:"
+            echo "kubectl pod-ops list [-c|--containers]"
+            return
+            ;;
+        -h|--help)
+            echo "Usage:"
+            echo "kubectl pod-ops list [-c|--containers]"
+            return
+            shift
+            ;;
+    esac
+done
+
+list_pods
+echo ""
+if [[ "x$list_containers" == "xtrue" ]]; then
+    echo -n "Select a pod to list its containers (enter ID number): "
+    read pod_id
+    echo ""
+    list_containers "$pod_id" true
+fi
