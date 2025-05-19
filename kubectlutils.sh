@@ -57,9 +57,9 @@ list_containers() {
     counter=0
     if [[ "x$with_init_containers" == "xtrue" ]]; then
         init_containers=$(echo "$pod_json" | jq -r '.spec.initContainers[]?.name' 2>/dev/null)
-        mapfile -t INIT_CONTAINERS_ARRAY <<< $init_containers 
         if [ ! -z "$init_containers" ]; then
             echo "Init Containers:"
+            mapfile -t INIT_CONTAINERS_ARRAY <<< $init_containers 
             for container in ${INIT_CONTAINERS_ARRAY[@]}; do
                 # Get container information
                 image=$(echo "$pod_json" | jq -r ".spec.initContainers[] | select(.name == \"$container\") | .image")
